@@ -37,8 +37,8 @@ def main(interactive = True):
             pred = test(model, f)
             if str(e) in str(pred):
                 correct += 1
-            if str(e-1) in str(pred) or str(e+1) in str(pred):
-                correct += .5
+            # if str(e-1) in str(pred) or str(e+1) in str(pred):
+            #     correct += .5
             total += 1
             if total % 1000 == 0:
                 print(correct, total, correct/total)
