@@ -57,7 +57,7 @@ def main(train = True):
         with open("dataloader.pickle", 'rb') as fin:
             train_loader = pickle.load(fin)
     except:
-        chessdata = ChessDataset("data/fenswoutdups.txt", "data/evalswoutdups.txt")
+        chessdata = ChessDataset("data/fentesting.txt", "data/testfenout.txt")
         train_loader = DataLoader(
                 dataset = chessdata,
                 batch_size = 4,
@@ -101,9 +101,9 @@ def main(train = True):
             if epoch % 10 == 0:
                 for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))))
             LOSS.append(str(loss))
-            if any([f in str(loss) for f in ('0.01', '0.02', '0.03', '0.04')]): 
-                print("Maybe, this is the one")
-                break
+            # if any([f in str(loss) for f in ('0.1', '0.2', '0.3', '0.4')]): 
+            #     print("Maybe, this is the one")
+            #     break
         for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))), fen)
         print(LOSS)
         with open("model.pickle", "wb+") as fout:

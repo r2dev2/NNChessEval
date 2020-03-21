@@ -1,3 +1,5 @@
+import pickle
+
 import torch
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
@@ -59,7 +61,7 @@ class ChessDataset(Dataset):
         with open(evalfile, 'r') as fin:
             self.y_data = Variable(torch.LongTensor([evalSimplify(e[:-1]).index(1) for e in fin.readlines()]))
             # self.y_data = Variable(torch.Tensor([int(evalSimplify(e[:-1])[2] == 1) for e in fin.readlines()]))
-        print(len([i for i in self.y_data if float(i) == 1]))
+        print(len([i for i in self.y_data if float(i) == 2]))
         print(len(self.y_data))
         self.len = min(len(self.x_data), len(self.y_data))
     
@@ -71,7 +73,9 @@ class ChessDataset(Dataset):
 
 def main():
     print(fenToInputs("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"))
-    d = ChessDataset("data/Tivfentest.txt", "data/fentestout1thread.txt")
+    d = ChessDataset("data/testData/fen.txt", "data/testData/eval.txt")
+    with open("testloader.pickle", 'wb+') as fout:
+        pickle.dump(d, fout)
     print(d[3])
 
 if __name__ == "__main__":
