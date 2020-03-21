@@ -101,7 +101,7 @@ def main(train = True):
             if epoch % 10 == 0:
                 for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))))
             LOSS.append(str(loss))
-            if '.00' in str(loss):
+            if any([f in str(loss) for f in ('0.01', '0.02', '0.03', '0.04')]): 
                 print("Maybe, this is the one")
                 break
         for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))), fen)
