@@ -41,7 +41,7 @@ def fenToInputs(fen, normalize = True):
             if c in LETTER_TO_NUMBER:
                 toadd = LETTER_TO_NUMBER[c]
                 if normalize:
-                    toadd /= 9
+                    toadd /= 5
                 output.append(toadd)
             else:
                 for i in range(int(c)): output.append(0)

@@ -5,6 +5,7 @@ import adabound
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+import torch.nn.functional as F
 
 from Loader import ChessDataset, fenToInputs
 
@@ -12,15 +13,14 @@ class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
 
-        self.l1 = torch.nn.Linear(69, 60)
-        self.l2 = torch.nn.Linear(60, 55)
-        self.l3 = torch.nn.Linear(55, 40)
-        self.l4 = torch.nn.Linear(40, 30)
-        self.l5 = torch.nn.Linear(30, 20)
-        self.l6 = torch.nn.Linear(20, 10)
-        self.l7 = torch.nn.Linear(10, 5)
+        self.l1 = torch.nn.Linear(69, 50)
+        self.l2 = torch.nn.Linear(50, 30)
+        self.l3 = torch.nn.Linear(30, 20)
+        self.l4 = torch.nn.Linear(20, 10)
+        self.l5 = torch.nn.Linear(10, 3)
         
         self.activation = torch.tanh
+        # self.activation = torch.nn.LeakyReLU(.2, inplace=True)
         self.sigmoid = torch.nn.Sigmoid()
 
     def forward(self, x):
@@ -28,9 +28,7 @@ class Model(torch.nn.Module):
         out = self.activation(self.l2(out))
         out = self.activation(self.l3(out))
         out = self.activation(self.l4(out))
-        out = self.activation(self.l5(out))
-        out = self.activation(self.l6(out))
-        out = self.l7(out)
+        out = self.l5(out)
         # gfn = out.grad_fn
         # new = []
         # for i, t in enumerate(out):
@@ -51,14 +49,14 @@ class Model(torch.nn.Module):
         # # return Variable(torch.Tensor([[y] for y in new]))
         # out.grad_fn = gfn
         # print(out)
-        return out
+        return F.softmax(out, dim = 1)
 
 def main(train = True):
     try:
         with open("dataloader.pickle", 'rb') as fin:
             train_loader = pickle.load(fin)
     except:
-        chessdata = ChessDataset("data/fentesting.txt", "data/testfenout.txt")
+        chessdata = ChessDataset("data/unbiasfen.txt", "data/unbiaseval.txt")
         train_loader = DataLoader(
                 dataset = chessdata,
                 batch_size = 64,
@@ -87,8 +85,8 @@ def main(train = True):
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
-        optimizer = torch.optim.SGD(model.parameters(), lr = float(sys.argv[2]), momentum=.5)
-        # optimizer = adabound.AdaBound(model.parameters(), lr = .0001, final_lr = .1)
+        optimizer = torch.optim.SGD(model.parameters(), lr = .001, momentum=.9)
+        # optimizer = adabound.AdaBound(model.parameters(), lr = .001, final_lr = .1)
 
 
         print("Starting to train, good luck")
