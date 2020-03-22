@@ -1,6 +1,7 @@
 import pickle
 import sys
 
+import adabound
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
@@ -11,7 +12,7 @@ class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
 
-        self.l1 = torch.nn.Linear(65, 60)
+        self.l1 = torch.nn.Linear(69, 60)
         self.l2 = torch.nn.Linear(60, 55)
         self.l3 = torch.nn.Linear(55, 40)
         self.l4 = torch.nn.Linear(40, 30)
@@ -60,9 +61,9 @@ def main(train = True):
         chessdata = ChessDataset("data/fentesting.txt", "data/testfenout.txt")
         train_loader = DataLoader(
                 dataset = chessdata,
-                batch_size = 4,
+                batch_size = 64,
                 shuffle = True,
-                num_workers = 2
+                num_workers = 4
         )
         with open("dataloader.pickle", 'wb+') as fout:
             pickle.dump(train_loader, fout)
@@ -74,19 +75,23 @@ def main(train = True):
     
     if train:
         LOSS = []
+        model = Model()
+        modelpath = "model.pt"
         try:
-            f = open("model.pickle", 'rb')
+            f = open(modelpath, 'rb')
             f.close()
-            with open("model.pickle", 'rb') as fin:
-                model = pickle.load(fin)
+            model.load_state_dict(torch.load(modelpath))
         except:
-            model = Model()
+            pass
+
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
-        optimizer = torch.optim.SGD(model.parameters(), lr = float(sys.argv[2]))
+        # optimizer = torch.optim.SGD(model.parameters(), lr = float(sys.argv[2]))
+        optimizer = adabound.AdaBound(model.parameters(), lr = .0001, final_lr = .1)
 
 
+        print("Starting to train, good luck")
         for epoch in range(100):
             model.train()
             for i, (data, target) in enumerate(train_loader):
@@ -94,23 +99,28 @@ def main(train = True):
                 optimizer.zero_grad()
                 y_pred = model(data)
                 loss = criterion(y_pred, target)
-                print(epoch, i, loss)
+                if i % 1000 == 0: print(epoch, i, loss)
 
                 loss.backward()
                 optimizer.step()
             if epoch % 10 == 0:
-                for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))))
+                for fen in fens: 
+                    output = model(torch.Tensor([fenToInputs(fen)]))
+                    pred = output.data.max(1, keepdim=True)[1]
+                    print(pred)
+            print(epoch, i, loss)
             LOSS.append(str(loss))
-            # if any([f in str(loss) for f in ('0.1', '0.2', '0.3', '0.4')]): 
+            # if any([f in str(loss) for f in ('0.0', '0.01', '0.02', '0.03', '0.04')]): 
             #     print("Maybe, this is the one")
+            #     modelpath = "yeetmodel.pt"
             #     break
         for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))), fen)
         print(LOSS)
-        with open("model.pickle", "wb+") as fout:
-            pickle.dump(model, fout)
+        torch.save(model.state_dict(), modelpath)
     else:
-        with open("model.pickle", "rb") as fin:
-            model = pickle.load(fin)
+        model = Model()
+        model.load_state_dict(torch.load(modelpath))
+        model.eval()
         for fen in fens:
             output = model(Variable(torch.Tensor([fenToInputs(fen)])))
             pred = output.data.max(1, keepdim=True)[1]
@@ -120,9 +130,10 @@ def main(train = True):
 if __name__ == "__main__":
     if '-h' in sys.argv:
         print("use -t {learning rate} to train")
-        print("starts training off model.pickle unless it is removed")
+        print("starts training off model.pt unless it is removed")
         print("data is from dataloader.pickle unless it is removed")
         print("go into code to change filepaths of data")
+        exit()
     fens = [
             "1rbq1rk1/3npp1p/2np2p1/3N4/1p1BP3/6PP/1PP2PB1/R2Q1RK1 b - - 0 16",
             "1rbq1rk1/3npp1p/2np2p1/3N4/1p1bP3/4B1PP/1PP2PB1/R2Q1RK1 w - - 0 16",

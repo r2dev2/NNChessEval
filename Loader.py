@@ -19,6 +19,16 @@ LETTER_TO_NUMBER = {
         'K' : 4
 }
 
+def castlingRights(fen):
+    endpart = ''.join(fen.split(' ')[1:])
+    rights = [
+        'K' in endpart,
+        'Q' in endpart,
+        'k' in endpart,
+        'q' in endpart
+    ]
+    return [int(b) for b in rights]
+
 # rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
 def fenToInputs(fen):
     output = []
@@ -29,37 +39,38 @@ def fenToInputs(fen):
     for rank in ranks:
         for c in rank:
             if c in LETTER_TO_NUMBER:
-                output.append(LETTER_TO_NUMBER[c])
+                output.append(LETTER_TO_NUMBER[c] / 9)
             else:
                 for i in range(int(c)): output.append(0)
     output.append(int(color == 'w'))
-    return output
+    rights = castlingRights(fen)
+    return output + rights
 
-# 0 is black win, 4 is white win
+# 0 is black win, 2 is white win
 def evalSimplify(ipt):
     try:
         e = eval(ipt)
     except:
         if ipt[1] == '-':
-            return [1, 0, 0, 0, 0]
-        return [0, 0, 0, 0, 1]
+            return 0
+        return 2
     if e <= -1.5 * 100:
-        return [1, 0, 0, 0, 0]
+        return 0
     elif -1.5 * 100 < e <= -.75 * 100:
-        return [0, 1, 0, 0, 0]
+        return 0
     elif -.75 * 100 < e < .75 * 100:
-        return [0, 0, 1, 0, 0]
+        return 1
     elif .75 * 100 <= e < 1.5 * 100:
-        return [0, 0, 0, 1, 0]
+        return 2
     else:
-        return [0, 0, 0, 0, 1]
+        return 2
 
 class ChessDataset(Dataset):
     def __init__(self, fenfile, evalfile):
         with open(fenfile, 'r') as fin:
             self.x_data = Variable(torch.Tensor([fenToInputs(fen[:-1]) for fen in fin.readlines()]))
         with open(evalfile, 'r') as fin:
-            self.y_data = Variable(torch.LongTensor([evalSimplify(e[:-1]).index(1) for e in fin.readlines()]))
+            self.y_data = Variable(torch.LongTensor([evalSimplify(e[:-1]) for e in fin.readlines()]))
             # self.y_data = Variable(torch.Tensor([int(evalSimplify(e[:-1])[2] == 1) for e in fin.readlines()]))
         print(len([i for i in self.y_data if float(i) == 2]))
         print(len(self.y_data))
