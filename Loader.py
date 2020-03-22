@@ -30,7 +30,7 @@ def castlingRights(fen):
     return [int(b) for b in rights]
 
 # rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
-def fenToInputs(fen):
+def fenToInputs(fen, normalize = True):
     output = []
     ranks = fen.split('/')
     last = ranks.pop().split(' ')
@@ -39,7 +39,10 @@ def fenToInputs(fen):
     for rank in ranks:
         for c in rank:
             if c in LETTER_TO_NUMBER:
-                output.append(LETTER_TO_NUMBER[c] / 9)
+                toadd = LETTER_TO_NUMBER[c]
+                if normalize:
+                    toadd /= 9
+                output.append(toadd)
             else:
                 for i in range(int(c)): output.append(0)
     output.append(int(color == 'w'))

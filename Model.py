@@ -87,8 +87,8 @@ def main(train = True):
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
-        # optimizer = torch.optim.SGD(model.parameters(), lr = float(sys.argv[2]))
-        optimizer = adabound.AdaBound(model.parameters(), lr = .0001, final_lr = .1)
+        optimizer = torch.optim.SGD(model.parameters(), lr = float(sys.argv[2]), momentum=.5)
+        # optimizer = adabound.AdaBound(model.parameters(), lr = .0001, final_lr = .1)
 
 
         print("Starting to train, good luck")

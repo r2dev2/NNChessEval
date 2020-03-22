@@ -11,7 +11,7 @@ from Model import Model
 def test(model, fen, needstoparse = True):
     if needstoparse:
         listfen = fenToInputs(fen)
-        v = torch.Tensor([fenToInputs(fen)])
+        v = torch.Tensor([listfen])
     else:
         v = fen
     output = model(v)
@@ -45,9 +45,9 @@ def main(interactive = True):
                 print(pred, e, file = fout)
             if str(e) in str(pred):
                 correct += 1
-            if str(e-1) in str(pred) or str(e+1) in str(pred):
-                if "--lenient" in sys.argv:
-                    correct += 1
+            # if str(e-1) in str(pred) or str(e+1) in str(pred):
+            #     if "--lenient" in sys.argv:
+            #         correct += 1
             total += 1
             if total % 1000 == 0:
                 print(correct, total, correct/total)
