@@ -5,6 +5,7 @@ import adabound
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+import torch.nn as nn
 import torch.nn.functional as F
 
 from Loader import ChessDataset, fenToInputs
@@ -12,44 +13,23 @@ from Loader import ChessDataset, fenToInputs
 class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
+        self.conv1 = nn.Conv2d(13, 50, kernel_size = 5)
+        self.conv2 = nn.Conv2d(50, 70, kernel_size = 3)
+        self.mp = nn.MaxPool2d(2)
 
-        self.l1 = torch.nn.Linear(69, 50)
-        self.l2 = torch.nn.Linear(50, 30)
-        self.l3 = torch.nn.Linear(30, 20)
-        self.l4 = torch.nn.Linear(20, 10)
-        self.l5 = torch.nn.Linear(10, 3)
-        
-        self.activation = torch.tanh
-        # self.activation = torch.nn.LeakyReLU(.2, inplace=True)
-        self.sigmoid = torch.nn.Sigmoid()
+        self.fc1 = nn.Linear(100, 20)
+        self.fc2 = nn.Linear(20, 10)
+        self.fc3 = nn.Linear(10, 3)
 
     def forward(self, x):
-        out = self.activation(self.l1(x))
-        out = self.activation(self.l2(out))
-        out = self.activation(self.l3(out))
-        out = self.activation(self.l4(out))
-        out = self.l5(out)
-        # gfn = out.grad_fn
-        # new = []
-        # for i, t in enumerate(out):
-        #     p = float(t)
-        #     if p <= -.8:
-        #         y_pred = -2
-        #     elif -.8 < p <= -.3:
-        #         y_pred = -1
-        #     elif -.3 < p < .3:
-        #         y_pred = 0
-        #     elif .3 <= p < .8:
-        #         y_pred = 1
-        #     else:
-        #         y_pred = 2
-        #     out[i] = torch.FloatTensor([y_pred])
-        #     print(out)
-        #     new.append(y_pred)
-        # # return Variable(torch.Tensor([[y] for y in new]))
-        # out.grad_fn = gfn
-        # print(out)
-        return F.softmax(out, dim = 1)
+        in_size = x.size(0)
+        out = F.relu(self.mp(self.conv1(x)))
+        out = F.relu(self.mp(self.conv2(out)))
+        out = out.view(in_size, -1)
+        out = f.relu(self.fc1(out))
+        out = f.relu(self.fc2(out))
+        out = f.relu(self.fc3(out))
+        return F.log_softmax(out, dim = 1)
 
 def main(train = True):
     try:
