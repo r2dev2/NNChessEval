@@ -39,9 +39,10 @@ def main(interactive = True):
         while True:
             print(test(model, input("fen? ")))
     else:
-        with open("data/testData/fen.txt", 'r') as fin:
+        # data/testData/fen.txt, eval.txt
+        with open("data/unbiasfen.txt", 'r') as fin:
             fens = [s[:-1] for s in fin.readlines()]
-        with open("data/testData/eval.txt", 'r') as fin:
+        with open("data/unbiaseval.txt", 'r') as fin:
             ev = [s[:-1] for s in fin.readlines()]
         evals = (evalSimplify(e) for e in ev)
         correct = 0

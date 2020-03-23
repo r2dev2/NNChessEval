@@ -66,8 +66,8 @@ def main(train = True):
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
-        # optimizer = torch.optim.SGD(model.parameters(), lr = .001, momentum=.9)
-        optimizer = adabound.AdaBound(model.parameters(), lr = 1e-3, final_lr = .1)
+        optimizer = torch.optim.SGD(model.parameters(), lr = .001, momentum=.5)
+        # optimizer = adabound.AdaBound(model.parameters(), lr = 1e-3, final_lr = .1)
         try:
             f = open(optimpath, 'rb')
             f.close()
@@ -78,7 +78,7 @@ def main(train = True):
 
         print("Starting to train, good luck")
         try:
-            for epoch in range(400):
+            for epoch in range(50):
                     model.train()
                     for i, (data, target) in enumerate(train_loader):
                         data, target = Variable(data), Variable(target)
