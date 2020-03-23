@@ -1,9 +1,9 @@
 import pickle
 import sys
 
-import adabound
+#import adabound
 import torch
-from torch.autograd import Variable
+#from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 
@@ -71,10 +71,12 @@ def main(train = True):
     # criterion = torch.nn.BCELoss()
     # optimizer = torch.optim.SGD(model.parameters(), lr = .0002)
     
+    modelpath = "model.pt"
+    
     if train:
         LOSS = []
         model = Model()
-        modelpath = "model.pt"
+        
         try:
             f = open(modelpath, 'rb')
             f.close()
@@ -85,7 +87,7 @@ def main(train = True):
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
-        optimizer = torch.optim.SGD(model.parameters(), lr = .001, momentum=.9)
+        optimizer = torch.optim.SGD(model.parameters(), lr = 1e-3, momentum=.9)
         # optimizer = adabound.AdaBound(model.parameters(), lr = .001, final_lr = .1)
 
 
@@ -93,11 +95,10 @@ def main(train = True):
         for epoch in range(100):
             model.train()
             for i, (data, target) in enumerate(train_loader):
-                data, target = Variable(data), Variable(target)
                 optimizer.zero_grad()
                 y_pred = model(data)
                 loss = criterion(y_pred, target)
-                if i % 1000 == 0: print(epoch, i, loss)
+                if i % 1000 == 0: print(epoch, i, loss.item())
 
                 loss.backward()
                 optimizer.step()
@@ -106,13 +107,13 @@ def main(train = True):
                     output = model(torch.Tensor([fenToInputs(fen)]))
                     pred = output.data.max(1, keepdim=True)[1]
                     print(pred)
-            print(epoch, i, loss)
-            LOSS.append(str(loss))
+            print(epoch, i, loss.item())
+            LOSS.append(str(loss.item()))
             # if any([f in str(loss) for f in ('0.0', '0.01', '0.02', '0.03', '0.04')]): 
             #     print("Maybe, this is the one")
             #     modelpath = "yeetmodel.pt"
             #     break
-        for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))), fen)
+        for fen in fens: print(model(torch.Tensor([fenToInputs(fen)])), fen)
         print(LOSS)
         torch.save(model.state_dict(), modelpath)
     else:
@@ -120,9 +121,9 @@ def main(train = True):
         model.load_state_dict(torch.load(modelpath))
         model.eval()
         for fen in fens:
-            output = model(Variable(torch.Tensor([fenToInputs(fen)])))
+            output = model(torch.Tensor([fenToInputs(fen)]))
             pred = output.data.max(1, keepdim=True)[1]
-            print(pred, pred == torch.Tensor([[1]]), fen)
+            print(f"pred: {pred.item()} correct: {pred == torch.Tensor([[1]])} {fen}")
 
 
 if __name__ == "__main__":
