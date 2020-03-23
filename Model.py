@@ -13,22 +13,23 @@ from Loader import ChessDataset, fenToInputs
 class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        self.conv1 = nn.Conv2d(13, 50, kernel_size = 5)
-        self.conv2 = nn.Conv2d(50, 70, kernel_size = 3)
-        self.mp = nn.MaxPool2d(2)
+        self.conv1 = nn.Conv2d(13, 20, kernel_size = 4)
+        self.conv2 = nn.Conv2d(20, 30, kernel_size = 1)
+        self.mp1 = nn.MaxPool2d(2)
+        self.mp2 = nn.MaxPool2d(2)
 
-        self.fc1 = nn.Linear(100, 20)
+        self.fc1 = nn.Linear(30, 20)
         self.fc2 = nn.Linear(20, 10)
         self.fc3 = nn.Linear(10, 3)
 
     def forward(self, x):
         in_size = x.size(0)
-        out = F.relu(self.mp(self.conv1(x)))
-        out = F.relu(self.mp(self.conv2(out)))
+        out = F.relu(self.mp1(self.conv1(x)))
+        out = F.relu(self.mp2(self.conv2(out)))
         out = out.view(in_size, -1)
-        out = f.relu(self.fc1(out))
-        out = f.relu(self.fc2(out))
-        out = f.relu(self.fc3(out))
+        out = F.relu(self.fc1(out))
+        out = F.relu(self.fc2(out))
+        out = F.relu(self.fc3(out))
         return F.log_softmax(out, dim = 1)
 
 def main(train = True):
@@ -65,8 +66,8 @@ def main(train = True):
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
-        optimizer = torch.optim.SGD(model.parameters(), lr = .001, momentum=.9)
-        # optimizer = adabound.AdaBound(model.parameters(), lr = .001, final_lr = .1)
+        # optimizer = torch.optim.SGD(model.parameters(), lr = .001, momentum=.9)
+        optimizer = adabound.AdaBound(model.parameters(), lr = .001, final_lr = .1)
 
 
         print("Starting to train, good luck")
