@@ -28,7 +28,9 @@ def castlingRights(fen):
 # rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
 def fenToInputs(fen, normalize = True):
     board = Bitboard(fen)
-    return board.to_list
+    toreturn = board.to_list()
+    del board
+    return toreturn
     
 # 0 is black win, 2 is white win
 def evalSimplify(ipt):

@@ -10,26 +10,24 @@ import torch.nn.functional as F
 
 from Loader import ChessDataset, fenToInputs
 
-class Model(torch.nn.Module):
+
+class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        self.conv1 = nn.Conv2d(13, 20, kernel_size = 4)
-        self.conv2 = nn.Conv2d(20, 30, kernel_size = 1)
-        self.mp1 = nn.MaxPool2d(2)
-        self.mp2 = nn.MaxPool2d(2)
+        self.conv1 = nn.Conv2d(13, 800, kernel_size = 4)
+        self.conv2 = nn.Conv2d(800, 400, kernel_size = 1)
+        self.mp = nn.MaxPool2d(2, stride = (2, 2))
 
-        self.fc1 = nn.Linear(30, 20)
-        self.fc2 = nn.Linear(20, 10)
-        self.fc3 = nn.Linear(10, 3)
+        self.fc1 = nn.Linear(1600, 100)
+        self.fc2 = nn.Linear(100, 3)
 
     def forward(self, x):
         in_size = x.size(0)
-        out = F.relu(self.mp1(self.conv1(x)))
-        out = F.relu(self.mp2(self.conv2(out)))
+        out = F.relu(self.mp(self.conv1(x)))
+        out = F.relu(self.conv2(out))
         out = out.view(in_size, -1)
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
-        out = F.relu(self.fc3(out))
         return F.log_softmax(out, dim = 1)
 
 def main(train = True):
@@ -56,6 +54,7 @@ def main(train = True):
         LOSS = []
         model = Model()
         modelpath = "model.pt"
+        optimpath = "ada.pt"
         try:
             f = open(modelpath, 'rb')
             f.close()
@@ -63,39 +62,50 @@ def main(train = True):
         except:
             pass
 
+
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
         # optimizer = torch.optim.SGD(model.parameters(), lr = .001, momentum=.9)
-        optimizer = adabound.AdaBound(model.parameters(), lr = .001, final_lr = .1)
+        optimizer = adabound.AdaBound(model.parameters(), lr = 1e-3, final_lr = .1)
+        try:
+            f = open(optimpath, 'rb')
+            f.close()
+            optimizer.load_state_dict(torch.load(optimpath))
+        except:
+            pass
 
 
         print("Starting to train, good luck")
-        for epoch in range(100):
-            model.train()
-            for i, (data, target) in enumerate(train_loader):
-                data, target = Variable(data), Variable(target)
-                optimizer.zero_grad()
-                y_pred = model(data)
-                loss = criterion(y_pred, target)
-                if i % 1000 == 0: print(epoch, i, loss)
+        try:
+            for epoch in range(400):
+                    model.train()
+                    for i, (data, target) in enumerate(train_loader):
+                        data, target = Variable(data), Variable(target)
+                        optimizer.zero_grad()
+                        y_pred = model(data)
+                        loss = criterion(y_pred, target)
+                        if i % 1000 == 0: print(epoch, i, loss)
 
-                loss.backward()
-                optimizer.step()
-            if epoch % 10 == 0:
-                for fen in fens: 
-                    output = model(torch.Tensor([fenToInputs(fen)]))
-                    pred = output.data.max(1, keepdim=True)[1]
-                    print(pred)
-            print(epoch, i, loss)
-            LOSS.append(str(loss))
-            # if any([f in str(loss) for f in ('0.0', '0.01', '0.02', '0.03', '0.04')]): 
-            #     print("Maybe, this is the one")
-            #     modelpath = "yeetmodel.pt"
-            #     break
+                        loss.backward()
+                        optimizer.step()
+                    if epoch % 10 == 0:
+                        for fen in fens: 
+                            output = model(torch.Tensor([fenToInputs(fen)]))
+                            pred = output.data.max(1, keepdim=True)[1]
+                            print(pred)
+                    print(epoch, i, loss)
+                    LOSS.append(str(loss))
+                    # if any([f in str(loss) for f in ('0.0', '0.01', '0.02', '0.03', '0.04')]): 
+                    #     print("Maybe, this is the one")
+                    #     modelpath = "yeetmodel.pt"
+                    #     break
+        except KeyboardInterrupt:
+            print("Saving Model")
         for fen in fens: print(model(Variable(torch.Tensor([fenToInputs(fen)]))), fen)
         print(LOSS)
         torch.save(model.state_dict(), modelpath)
+        torch.save(optimizer.state_dict(), optimpath)
     else:
         model = Model()
         model.load_state_dict(torch.load(modelpath))
