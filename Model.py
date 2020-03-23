@@ -6,6 +6,7 @@ import torch
 #from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
+import argparse
 
 from Loader import ChessDataset, fenToInputs
 
@@ -51,7 +52,7 @@ class Model(torch.nn.Module):
         # print(out)
         return F.softmax(out, dim = 1)
 
-def main(train = True):
+def main(train = True, lr=1e-3):
     try:
         with open("dataloader.pickle", 'rb') as fin:
             train_loader = pickle.load(fin)
@@ -87,7 +88,7 @@ def main(train = True):
     
         criterion = torch.nn.CrossEntropyLoss()
         # criterion = torch.nn.BCELoss()
-        optimizer = torch.optim.SGD(model.parameters(), lr = 1e-3, momentum=.9)
+        optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum=.9)
         # optimizer = adabound.AdaBound(model.parameters(), lr = .001, final_lr = .1)
 
 
@@ -127,6 +128,10 @@ def main(train = True):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", help="to train or not to train", default=True)
+    parser.add_argument("-lr", help="learning rate for training", default = 1e-3)
+    args = parser.parse_args()
     if '-h' in sys.argv:
         print("use -t {learning rate} to train")
         print("starts training off model.pt unless it is removed")
@@ -143,5 +148,5 @@ if __name__ == "__main__":
             "2bq2k1/nr1n1p1p/4r1p1/4p3/1N2P3/6PP/1PPQ1PB1/R4RK1 b - - 2 22",
             "2bq2k1/nr1n1p1p/4r1p1/4p3/1N2P3/6PP/1PPQ1PB1/R4RK1 w - - 2 22" # should be diff than prev
             ]
-    main('-t' in sys.argv)
+    main(args.t, args.lr)
 
