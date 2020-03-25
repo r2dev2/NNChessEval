@@ -1,7 +1,6 @@
 import pickle
 
 import torch
-from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 
 from Common import fenToInputs, evalSimplify
@@ -10,9 +9,9 @@ from Common import fenToInputs, evalSimplify
 class ChessDataset(Dataset):
     def __init__(self, fenfile, evalfile):
         with open(fenfile, 'r') as fin:
-            self.x_data = Variable(torch.Tensor([fenToInputs(fen[:-1]) for fen in fin.readlines()]))
+            self.x_data = torch.Tensor([fenToInputs(fen[:-1]) for fen in fin.readlines()])
         with open(evalfile, 'r') as fin:
-            self.y_data = Variable(torch.LongTensor([evalSimplify(e[:-1]) for e in fin.readlines()]))
+            self.y_data = torch.LongTensor([evalSimplify(e[:-1]) for e in fin.readlines()])
             # self.y_data = Variable(torch.Tensor([int(evalSimplify(e[:-1])[2] == 1) for e in fin.readlines()]))
         print(len([i for i in self.y_data if float(i) == 2]))
         print(len(self.y_data))
