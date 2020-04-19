@@ -1,4 +1,5 @@
 from copy import deepcopy
+import numpy as np
 
 EMPTY_BOARD = [
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -75,6 +76,9 @@ class Bitboard:
         return [self.wrook, self.wnight, self.wbish, self.wqueen, self.wking, self.wpawn, 
                 self.brook, self.bnight, self.bbish, self.bqueen, self.bking, self.bpawn,
                 self.infolayer]
+    
+    def to_np(self):
+        return np.array(self.to_list())
 
     def __str__(self):
         return self.fen
